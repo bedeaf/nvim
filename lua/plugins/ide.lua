@@ -33,6 +33,8 @@ return {
         ui = {live = '*', selected = '+', unselected = ' '}},
       sources = {explorer = {
         title = 'Proje dosyaları',
+        -- Start in the search field so typing filters files right away.
+        focus = 'input',
         layout = {layout = {width = 28, min_width = 28}},
         win = {
           list = {keys = {
