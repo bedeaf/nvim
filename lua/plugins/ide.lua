@@ -3,6 +3,29 @@ for _, names in ipairs({vim.lsp.protocol.SymbolKind, vim.lsp.protocol.Completion
   for _, name in ipairs(names) do text_kinds[name] = name:sub(1, 1) end
 end
 
+-- Search results arrive asynchronously, and TextChangedI does not fire while
+-- keys are still queued, so after fast typing a picker has not even seen the
+-- new text: Enter hits a stale item and Down is undone when the list jumps to
+-- the best match. Hand the text over, wait (vim.wait keeps processing events)
+-- for the search and the scheduled render, then act in the key's own context.
+local function settled(picker, fn)
+  -- Live pickers (grep) keep the typed text in filter.search.
+  local field = picker.opts.live and 'search' or 'pattern'
+  local text, done = picker.input:get(), nil
+  if text ~= picker.input.filter[field] then
+    done = false
+    picker.input.filter[field] = text
+    picker:find({refresh = false, on_done = function() done = true end})
+  end
+  vim.wait(1500, function()
+    if picker.closed then return true end
+    if done == nil then return not picker:is_active() end
+    return done
+  end, 10)
+  vim.wait(40)
+  if not picker.closed then fn() end
+end
+
 return {
   {'amedoeyes/eyes.nvim', lazy = false, priority = 1000, opts = {
     extend = {highlights = {IDETabHover = {link = 'Visual'}}},
@@ -26,6 +49,17 @@ return {
     input = {enabled = true, icon = ''}, statuscolumn = {enabled = false},
     picker = {
       prompt = '> ',
+      -- Every picker: Enter and the arrows act on the results for what was typed.
+      actions = {
+        settled_confirm = function(picker) settled(picker, function() picker:action('confirm') end) end,
+        settled_down = function(picker) settled(picker, function() picker:action('list_down') end) end,
+        settled_up = function(picker) settled(picker, function() picker:action('list_up') end) end,
+      },
+      win = {input = {keys = {
+        ['<CR>'] = {'settled_confirm', mode = {'n', 'i'}},
+        ['<Down>'] = {'settled_down', mode = {'n', 'i'}},
+        ['<Up>'] = {'settled_up', mode = {'n', 'i'}},
+      }}},
       icons = {files = {enabled = false}, git = {enabled = false}, kinds = text_kinds,
         lsp = {unavailable = '-', enabled = '+', disabled = '-', attached = '*'},
         keymaps = {nowait = '!'}, undo = {saved = 'S'},
@@ -35,44 +69,15 @@ return {
         title = 'Proje dosyaları',
         -- Start in the search field so typing filters files right away.
         focus = 'input',
-        -- Search results arrive asynchronously. A key typed before they land
-        -- hits the stale list: Enter confirms the root folder and Down is
-        -- undone when the list jumps to the best match. Wait until the search
-        -- has settled, then act. While searching, upstream's Enter only
-        -- reveals the match; files open at once, folders keep the reveal.
-        actions = (function()
-          -- TextChangedI does not fire while keys are still queued, so after
-          -- fast typing the picker has not even seen the new text. Hand the
-          -- text over, wait (vim.wait keeps processing events) for the search
-          -- and the list's jump to the best match, then act in the key's own
-          -- context.
-          local function settled(picker, fn)
-            local text, done = picker.input:get(), nil
-            if text ~= picker.input.filter.pattern then
-              done = false
-              picker.input.filter.pattern = text
-              picker:find({refresh = false, on_done = function() done = true end})
-            end
-            vim.wait(1500, function()
-              if picker.closed then return true end
-              if done == nil then return not picker:is_active() end
-              return done
-            end, 10)
-            vim.wait(40) -- let the scheduled render place the cursor first
-            if not picker.closed then fn() end
-          end
-          return {
-            open_match = function(picker, _, action)
-              settled(picker, function()
-                local item = picker:current()
-                if item and not item.dir then return Snacks.picker.actions.jump(picker, item, action) end
-                picker:action('confirm')
-              end)
-            end,
-            settled_down = function(picker) settled(picker, function() picker:action('list_down') end) end,
-            settled_up = function(picker) settled(picker, function() picker:action('list_up') end) end,
-          }
-        end)(),
+        -- While searching, upstream's Enter only reveals the match in the
+        -- tree; files open at once, folders keep the reveal.
+        actions = {open_match = function(picker, _, action)
+          settled(picker, function()
+            local item = picker:current()
+            if item and not item.dir then return Snacks.picker.actions.jump(picker, item, action) end
+            picker:action('confirm')
+          end)
+        end},
         layout = {layout = {width = 28, min_width = 28}},
         win = {
           list = {keys = {
@@ -80,8 +85,6 @@ return {
           }},
           input = {keys = {
             ['<CR>'] = {'open_match', mode = {'n', 'i'}},
-            ['<Down>'] = {'settled_down', mode = {'n', 'i'}},
-            ['<Up>'] = {'settled_up', mode = {'n', 'i'}},
             ['<leader>e'] = {'close', mode = {'n', 'i'}},
             ['<leader>q'] = {'close', mode = 'n'},
           }},
