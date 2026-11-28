@@ -111,7 +111,8 @@ function M.setup()
   map('<leader>e', function() require('oil').open() end, 'Files / move / rename')
   map('[d', function() vim.diagnostic.jump({count = -1, float = true}) end, 'Previous error / warning')
   map(']d', function() vim.diagnostic.jump({count = 1, float = true}) end, 'Next error / warning')
-  vim.keymap.set({'n', 'x'}, '<leader>f', function()
+  -- Format lives on Space cF; Space f is the home file search (keymaps.lua).
+  vim.keymap.set({'n', 'x'}, '<leader>cF', function()
     require('conform').format({async = true, lsp_format = 'fallback'})
   end, {desc = 'Format code'})
   vim.ui.select = function(items, opts, callback) require('custom.algo_ui').select(items, opts, callback) end

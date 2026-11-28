@@ -97,7 +97,8 @@ map({'n', 't'}, '<F7>', ide.terminal, {desc = 'Toggle project terminal'})
 map('n', '<leader>xq', function() Snacks.picker.qflist() end, {desc = 'Build errors'})
 map('n', '<leader>cg', ide.grep, {desc = 'Search text in project'})
 map('n', '<leader>/', ide.grep, {desc = 'Search text in project'})
-map('n', '<leader>ff', ide.files, {desc = 'Find file in project'})
+map('n', '<leader>f', ide.home_files, {desc = 'Find file under home'})
+map('n', '<leader>ff', ide.all_files, {desc = 'Find file on this computer'})
 map('n', '<leader>mm', function() vim.ui.open('https://exercism.org/tracks') end,
   {desc = 'Exercism: open exercises in browser'})
 map('n', '<leader>mf', function() Snacks.picker.files({cwd = vim.fn.expand('~/code/exercism')}) end,
@@ -127,7 +128,7 @@ local function help()
   Snacks.win({
     text = table.concat({
       'Space Space      Save',
-      'Ctrl s / Ctrl p  Save / find file',
+      'Ctrl s / Ctrl p  Save / find file in project',
       'Page Up / Down   Scroll the view one line up / down',
       'Ctrl ↑ / ↓       Previous / next block boundary',
       'Shift ↑ / ↓      Move line / selected block',
@@ -148,7 +149,8 @@ local function help()
       'Shift-F6 / Space rx  Stop the program',
       'Space rb / rB    Build / build preview',
       'Space e          Toggle file tree',
-      'Space ff / fp    Find file / open project',
+      'Space f / ff     Find file under home / on this computer',
+      'Space fp         Open project',
       'Space ba / bh    Pin file / pinned files',
       'Space 1–5        Go to pinned file',
       'Space sw / sR    Search word / resume last search',
@@ -159,7 +161,7 @@ local function help()
       'gO / Space cs    File symbols (C#: gO)',
       'Space cS / co    Project symbols / file outline',
       'gl / Space cI    Line diagnostic / language tool status',
-      'Space cf         Format code',
+      'Space cF         Format code',
       'Space xq         Build errors',
       'F5 / F9          Debug / breakpoint',
       'Ctrl+n / Space cn  New project (C++ / OpenGL included)',

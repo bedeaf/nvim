@@ -54,6 +54,15 @@ function M.outline()
 end
 
 function M.files() Snacks.picker.files({cwd = project.root()}) end
+-- Space f: everything under home. Space ff: the whole computer, minus virtual
+-- file systems and caches that only slow the walk down.
+function M.home_files() Snacks.picker.files({cwd = vim.env.HOME, title = 'Files in ~'}) end
+function M.all_files()
+  Snacks.picker.files({cwd = '/', title = 'Files on this computer', exclude = {
+    'proc', 'sys', 'dev', 'run', 'tmp', 'var/tmp', 'var/cache', 'var/lib/docker',
+    'mnt', 'media', 'archive', '.cache', 'node_modules', '.git',
+  }})
+end
 function M.grep() Snacks.picker.grep({cwd = project.root()}) end
 
 function M.terminal()
