@@ -183,7 +183,11 @@ function M.setup()
   vim.o.showtabline = 0
   vim.o.tabline = '%!v:lua.NeovimIDE.tabline()'
   vim.o.mousemoveevent = true
-  vim.keymap.set({'n', 'i', 'x', 's', 't', 'c'}, '<MouseMove>', M.mouse_move, {desc = 'Sekme vurgusu'})
+  -- A popup menu reads <MouseMove> itself; a mapping that swallows it closes the menu.
+  vim.keymap.set({'n', 'i', 'x', 's', 't', 'c'}, '<MouseMove>', function()
+    if vim.fn.pumvisible() == 1 then return '<MouseMove>' end
+    return '<Cmd>lua NeovimIDE.mouse_move()<CR>'
+  end, {expr = true, desc = 'Sekme vurgusu'})
   local group = api.nvim_create_augroup('LocalIDELayout', {clear = true})
   -- Splits copy window options, but not the saved options of a blank editor.
   local inherited_options
