@@ -42,7 +42,7 @@ map('x', '<C-v>', '"+P', {desc = 'Paste over selection, keep clipboard'})
 map('s', '<C-v>', '<C-g>"+P', {desc = 'Paste over selection, keep clipboard'})
 map('i', '<C-v>', '<C-r><C-p>+', {desc = 'Paste clipboard text literally'})
 map('c', '<C-v>', '<C-r>+', {desc = 'Paste into command line'})
-for _, key in ipairs({'y', 'Y', 'p', 'P', 'gp', 'gP', '[p', ']p', '[P', ']P', '<leader>y', '<leader>p'}) do
+for _, key in ipairs({'y', 'Y', 'p', 'P', 'gp', 'gP', '[p', ']p', '[P', ']P', '<leader>y'}) do
   map({'n', 'x'}, key, '<Nop>', {desc = 'Disabled: use Ctrl+C / Ctrl+V'})
 end
 for _, key in ipairs({'<C-Insert>', '<S-Insert>', '<MiddleMouse>'}) do
@@ -97,17 +97,19 @@ map({'n', 't'}, '<F7>', ide.terminal, {desc = 'Toggle project terminal'})
 map('n', '<leader>xq', function() Snacks.picker.qflist() end, {desc = 'Build errors'})
 map('n', '<leader>cg', ide.grep, {desc = 'Search text in project'})
 map('n', '<leader>/', ide.grep, {desc = 'Search text in project'})
+-- LazyVim core maps under Space f (new file, terminals) would delay Space f.
+for _, lhs in ipairs({'<leader>fn', '<leader>ft', '<leader>fT'}) do pcall(vim.keymap.del, 'n', lhs) end
 map('n', '<leader>f', ide.home_files, {desc = 'Find file under home'})
-map('n', '<leader>ff', ide.all_files, {desc = 'Find file on this computer'})
+map('n', '<leader>F', ide.all_files, {desc = 'Find file on this computer'})
+require('custom.ide.filelist').setup()
 map('n', '<leader>mm', function() vim.ui.open('https://exercism.org/tracks') end,
   {desc = 'Exercism: open exercises in browser'})
 map('n', '<leader>mf', function() Snacks.picker.files({cwd = vim.fn.expand('~/code/exercism')}) end,
   {desc = 'Exercism: exercise files'})
 
 -- Search/navigation follow the same project root as build and debug.
-map('n', '<leader>fp', function() Snacks.picker.projects() end, {desc = 'Open / switch project'})
-map('n', '<leader>fr', function() Snacks.picker.recent({cwd = require('custom.ide.project').root(), filter = {cwd = true}}) end,
-  {desc = 'Recent project files'})
+-- Nothing else starts with Space f, so it fires without waiting for timeoutlen.
+map('n', '<leader>p', function() Snacks.picker.projects() end, {desc = 'Open / switch project'})
 map({'n', 'x'}, '<leader>sw', function() Snacks.picker.grep_word({cwd = require('custom.ide.project').root()}) end,
   {desc = 'Search word / selection in project'})
 map('n', '<leader>sR', function() Snacks.picker.resume() end, {desc = 'Resume last search'})
@@ -149,8 +151,8 @@ local function help()
       'Shift-F6 / Space rx  Stop the program',
       'Space rb / rB    Build / build preview',
       'Space e          Toggle file tree',
-      'Space f / ff     Find file under home / on this computer',
-      'Space fp         Open project',
+      'Space f / F      Find file under home / on this computer',
+      'Space p          Open project',
       'Space ba / bh    Pin file / pinned files',
       'Space 1–5        Go to pinned file',
       'Space sw / sR    Search word / resume last search',

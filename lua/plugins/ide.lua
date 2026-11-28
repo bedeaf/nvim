@@ -92,7 +92,11 @@ return {
       }},
     },
     terminal = {win = {position = 'bottom', height = 0.35}},
-  }, keys = {{'<leader><space>', false}, {'<leader>n', false}}},
+  }, keys = {{'<leader><space>', false}, {'<leader>n', false},
+    -- LazyVim's Space f… keys would make Space f wait for a second key.
+    {'<leader>ff', false}, {'<leader>fF', false}, {'<leader>fr', false}, {'<leader>fR', false},
+    {'<leader>fb', false}, {'<leader>fB', false}, {'<leader>fc', false}, {'<leader>fg', false},
+    {'<leader>fp', false}, {'<leader>fe', false}, {'<leader>fE', false}}},
   {'folke/which-key.nvim', opts = function(_, opts)
     opts.delay = 500
     opts.win = vim.tbl_deep_extend('force', opts.win or {}, {border = 'single'})
@@ -101,7 +105,6 @@ return {
     opts.spec = {
       {'<leader>c', group = 'Code / project'}, {'<leader>r', group = 'Run / debug'},
       {'<leader>x', group = 'Diagnostics'}, {'<leader>b', group = 'Files / session'},
-      {'<leader>f', group = 'Find'},
       {'<leader>m', group = 'Exercism'},
     }
   end},
