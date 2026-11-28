@@ -78,13 +78,13 @@ function M.action(id)
   local buf = api.nvim_get_current_buf()
   if id == 2 then
     if api.nvim_buf_get_name(buf) ~= '' then return vim.cmd.update() end
-    vim.ui.input({prompt = 'Dosyayı kaydet: ', default = (state().root or vim.fn.getcwd()) .. '/', completion = 'file'}, function(path)
+    vim.ui.input({prompt = 'Save file: ', default = (state().root or vim.fn.getcwd()) .. '/', completion = 'file'}, function(path)
       if not path or path == '' or not api.nvim_buf_is_valid(buf) then return end
       local ok, err = pcall(api.nvim_buf_call, buf, function() vim.cmd('write ' .. vim.fn.fnameescape(path)) end)
       if not ok then vim.notify(err, vim.log.levels.ERROR) end
     end)
   elseif (id == 3 or id == 4) and api.nvim_buf_get_name(buf) == '' then
-    vim.notify('Önce dosyaya bir ad verip kaydet.', vim.log.levels.WARN)
+    vim.notify('Give the file a name and save it first.', vim.log.levels.WARN)
   elseif id == 3 then
     require('custom.ide.tasks').run('run')
   elseif id == 4 then
@@ -173,9 +173,9 @@ function M.analysis_status()
   local clients = vim.lsp.get_clients({bufnr = buf})
   if #clients == 0 then return '' end
   for _, client in ipairs(clients) do
-    if not client.initialized then return 'Analiz: başlıyor' end
+    if not client.initialized then return 'Analysis: starting' end
   end
-  return 'Analiz: hazır'
+  return 'Analysis: ready'
 end
 
 function M.setup()
@@ -187,7 +187,7 @@ function M.setup()
   vim.keymap.set({'n', 'i', 'x', 's', 't', 'c'}, '<MouseMove>', function()
     if vim.fn.pumvisible() == 1 then return '<MouseMove>' end
     return '<Cmd>lua NeovimIDE.mouse_move()<CR>'
-  end, {expr = true, desc = 'Sekme vurgusu'})
+  end, {expr = true, desc = 'Tab hover highlight'})
   local group = api.nvim_create_augroup('LocalIDELayout', {clear = true})
   -- Splits copy window options, but not the saved options of a blank editor.
   local inherited_options

@@ -9,7 +9,7 @@ return {
         set('n', '<Esc>', mc.clearCursors)
         -- A pending "cc" prefix makes multicursor replay the first replacement
         -- character twice. Keep its existing single-key change action immediate.
-        set('x', 'c', 'c', {nowait = true, desc = 'Seçilen eşleşmeleri değiştir'})
+        set('x', 'c', 'c', {nowait = true, desc = 'Change selected matches'})
       end)
     end,
   },

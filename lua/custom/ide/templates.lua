@@ -37,8 +37,8 @@ local function dotnet(name, fsharp)
     {{'dotnet', 'restore', '--ignore-failed-sources'}})
 end
 
-add('csharp', 'C# · .NET konsol', 'Program.cs', {'dotnet'}, function(name) return dotnet(name, false) end,
-  '.NET 10 SDK gerekir. İlk çalıştırmadan önce kurulum eylemiyle dotnet restore çalıştır.')
+add('csharp', 'C# · .NET console', 'Program.cs', {'dotnet'}, function(name) return dotnet(name, false) end,
+  'Needs the .NET 10 SDK. Run dotnet restore with the setup action before the first run.')
 
 local function native(name, cpp)
   local source = cpp and 'main.cpp' or 'main.c'
@@ -82,7 +82,7 @@ add('opengl', 'C++ · OpenGL / GLFW', 'main.cpp', {'python3', 'cmake', 'c++'}, f
     '    }', '    glfwDestroyWindow(window);', '    glfwTerminate();', '    return 0;', '}', '',
   }, '\n')
   return files, tasks
-end, 'GLFW ve OpenGL geliştirme paketleri gerekir. Modern OpenGL fonksiyonları için ayrıca GLAD gibi bir yükleyici ekle.')
+end, 'Needs the GLFW and OpenGL development packages. Add a loader such as GLAD for modern OpenGL functions.')
 
 add('rust', 'Rust · Cargo', 'src/main.rs', {'cargo'}, function(name)
   return {
@@ -100,7 +100,7 @@ add('python', 'Python · pyproject', 'main.py', {'python3'}, function(name)
     {{'python3', '-m', 'unittest', 'discover', '-s', 'tests'}}, {{'python3', '-m', 'venv', '.venv'}})
 end)
 
-add('go', 'Go · modül', 'main.go', {'go'}, function(name)
+add('go', 'Go · module', 'main.go', {'go'}, function(name)
   return {
     ['go.mod'] = 'module example.com/' .. slug(name) .. '\n\ngo 1.22\n',
     ['main.go'] = 'package main\n\nimport "fmt"\n\nfunc main() {\n\tfmt.Println("Hello, world!")\n}\n',
@@ -123,7 +123,7 @@ add('asm', 'Assembly · NASM x86-64 Linux', 'main.asm', {'make', 'nasm', 'ld'}, 
       'clean:', '\trm -rf build', '',
     }, '\n'),
   }, actions({{'make', 'run'}}, {{'make'}})
-end, 'Bu şablon NASM ve GNU ld ile x86-64 Linux içindir.')
+end, 'This template targets x86-64 Linux with NASM and GNU ld.')
 
 add('java', 'Java · JDK / Maven', 'src/main/java/Main.java', {'java', 'javac'}, function(name)
   local compile = {'javac', '-d', 'build/classes', '-sourcepath', 'src/main/java', 'src/main/java/Main.java'}
@@ -139,7 +139,7 @@ add('java', 'Java · JDK / Maven', 'src/main/java/Main.java', {'java', 'javac'},
       .. '        <artifactId>maven-compiler-plugin</artifactId>\n        <version>3.13.0</version>\n'
       .. '      </plugin>\n    </plugins>\n  </build>\n</project>\n',
   }, actions({compile, {'java', '-cp', 'build/classes', 'Main'}}, {copy(compile)})
-end, 'JDK 17+ gerekir. IDE eylemleri JDK ile doğrudan derler; pom.xml Maven ile de kullanılabilir.')
+end, 'Needs JDK 17+. The IDE actions compile with the JDK directly; pom.xml also works with Maven.')
 
 add('javascript', 'JavaScript · Node.js', 'src/main.js', {'node'}, function(name)
   return {
@@ -160,7 +160,7 @@ add('typescript', 'TypeScript · Node.js', 'src/main.ts', {'node', 'npm'}, funct
     ['tsconfig.json'] = json({compilerOptions = {target = 'ES2022', module = 'NodeNext', moduleResolution = 'NodeNext',
       rootDir = 'src', outDir = 'dist', strict = true, sourceMap = true, noEmitOnError = true}, include = {'src'}}),
   }, actions({{'npm', 'run', 'build'}, {'node', 'dist/main.js'}}, {{'npm', 'run', 'build'}}, nil, {{'npm', 'install'}})
-end, 'İlk çalıştırmadan önce kurulum eylemiyle npm install çalıştır. Node.js 20+ gerekir.')
+end, 'Run npm install with the setup action before the first run. Needs Node.js 20+.')
 
 local style = ':root { font-family: system-ui, sans-serif; color-scheme: light dark; }\nbody { margin: 0; min-height: 100vh; display: grid; place-items: center; }\nmain { max-width: 48rem; padding: 2rem; }\nbutton { font: inherit; padding: 0.5rem 1rem; cursor: pointer; }\n'
 local function html(name, source)
@@ -180,7 +180,7 @@ add('web', 'Web · HTML / CSS / JavaScript', 'index.html', {'python3', 'node'}, 
     ['package.json'] = json({name = name:lower(), version = '0.1.0', private = true,
       scripts = {start = 'python3 -m http.server 8000 --bind 127.0.0.1', build = 'node --check main.js'}}),
   }, actions({{'python3', '-m', 'http.server', '8000', '--bind', '127.0.0.1'}}, {{'node', '--check', 'main.js'}})
-end, 'Çalıştırınca tarayıcıda http://127.0.0.1:8000 adresini aç. Sunucuyu Ctrl-C ile durdur; paket kurulumu gerekmez.')
+end, 'After running, open http://127.0.0.1:8000 in the browser. Stop the server with Ctrl-C; no packages to install.')
 
 local function frontend(name, vue)
   local files = {
@@ -209,14 +209,14 @@ local function frontend(name, vue)
     devDependencies = dev, engines = {node = '^20.19.0 || >=22.12.0'}})
   return files, actions({{'npm', 'run', 'dev'}}, {{'npm', 'run', 'build'}}, nil, {{'npm', 'install'}})
 end
-local frontend_notes = 'Node.js 20.19+ veya 22.12+ gerekir. Önce kurulum eylemiyle npm install çalıştır; çalıştırınca terminaldeki yerel adresi tarayıcıda aç. Ctrl-C sunucuyu durdurur.'
+local frontend_notes = 'Needs Node.js 20.19+ or 22.12+. Run npm install with the setup action first; after running, open the local address shown in the terminal. Ctrl-C stops the server.'
 add('react', 'React · TypeScript / Vite', 'src/main.tsx', {'node', 'npm'}, function(name) return frontend(name, false) end, frontend_notes)
 add('vue', 'Vue · TypeScript / Vite', 'src/main.ts', {'node', 'npm'}, function(name) return frontend(name, true) end, frontend_notes)
 
 add('ruby', 'Ruby · Bundler', 'main.rb', {'ruby'}, function()
   return {['main.rb'] = 'puts "Hello, world!"\n', ['Gemfile'] = 'source "https://rubygems.org"\n\n# Add gems here when needed.\n'},
     actions({{'ruby', 'main.rb'}}, {{'ruby', '-c', 'main.rb'}}, nil, {{'bundle', 'install'}})
-end, 'Başlangıç programı yalnızca Ruby ister; Gemfile içine paket eklediğinde Bundler ile kurulum yap.')
+end, 'The starter program needs only Ruby; when you add gems to the Gemfile, install them with Bundler.')
 
 add('php', 'PHP · Composer', 'main.php', {'php'}, function(name)
   return {
@@ -224,7 +224,7 @@ add('php', 'PHP · Composer', 'main.php', {'php'}, function(name)
     ['composer.json'] = json({name = 'local/' .. slug(name), description = 'Console application', type = 'project',
       require = {php = '>=8.1'}, scripts = {start = 'php main.php', check = 'php -l main.php'}}),
   }, actions({{'php', 'main.php'}}, {{'php', '-l', 'main.php'}}, nil, {{'composer', 'install'}})
-end, 'Başlangıç programı yalnızca PHP 8.1+ ister; paket eklediğinde Composer ile kurulum yap.')
+end, 'The starter program needs only PHP 8.1+; when you add packages, install them with Composer.')
 
 add('swift', 'Swift · Swift Package Manager', 'Sources/App/main.swift', {'swift'}, function(name)
   return {
@@ -233,7 +233,7 @@ add('swift', 'Swift · Swift Package Manager', 'Sources/App/main.swift', {'swift
       .. '    name: "' .. name .. '",\n    products: [.executable(name: "app", targets: ["App"])],\n'
       .. '    targets: [.executableTarget(name: "App")]\n)\n',
   }, actions({{'swift', 'run', '--skip-update', 'app'}}, {{'swift', 'build', '--skip-update'}}, nil, {{'swift', 'package', 'resolve'}})
-end, 'Swift 5.9+ konsol projesi; macOS uygulama paketi içermez.')
+end, 'Swift 5.9+ console project; no macOS app bundle.')
 
 add('kotlin', 'Kotlin · JVM / Gradle', 'src/main/kotlin/Main.kt', {'gradle', 'java'}, function(name)
   return {
@@ -244,15 +244,15 @@ add('kotlin', 'Kotlin · JVM / Gradle', 'src/main/kotlin/Main.kt', {'gradle', 'j
       .. 'java { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }\n'
       .. 'application { mainClass.set("MainKt") }\n',
   }, actions({{'gradle', '--offline', 'run'}}, {{'gradle', '--offline', 'build'}}, nil, {{'gradle', 'build'}})
-end, 'JDK 17+ ve kurulu Gradle gerekir (Kotlin 2.4.20: Gradle 7.6.3–9.7). Önce kurulum eylemi derleyici ve standart kütüphaneyi indirir. Gradle sürümün kullandığın JDK ile uyumlu olmalı; wrapper dahil değildir.')
+end, 'Needs JDK 17+ and an installed Gradle (Kotlin 2.4.20: Gradle 7.6.3–9.7). The setup action first downloads the compiler and standard library. Your Gradle version must match your JDK; no wrapper is included.')
 
-add('dart', 'Dart · konsol / pub', 'bin/main.dart', {'dart'}, function(name)
+add('dart', 'Dart · console / pub', 'bin/main.dart', {'dart'}, function(name)
   return {
     ['bin/main.dart'] = 'void main() {\n  print("Hello, world!");\n}\n',
     ['pubspec.yaml'] = 'name: app_' .. snake(name) .. '\ndescription: A console application.\nversion: 0.1.0\npublish_to: none\nenvironment:\n  sdk: ">=3.0.0 <4.0.0"\n',
     ['analysis_options.yaml'] = 'analyzer:\n  language:\n    strict-casts: true\n    strict-inference: true\n',
   }, actions({{'dart', 'bin/main.dart'}}, {{'dart', 'analyze'}}, nil, {{'dart', 'pub', 'get'}})
-end, 'Dart 3 SDK gerekir. Bu bir konsol projesidir; Flutter veya mobil uygulama dosyaları içermez.')
+end, 'Needs the Dart 3 SDK. This is a console project; no Flutter or mobile app files.')
 
 local function script_make(run, check)
   return '.PHONY: run check\nrun:\n\t' .. run .. '\n\ncheck:\n\t' .. check .. '\n'
@@ -264,7 +264,7 @@ add('lua', 'Lua · Lua 5.4', 'main.lua', {'lua', 'luac'}, function()
   }, actions({{'lua', 'main.lua'}}, {{'luac', '-p', 'main.lua'}})
 end)
 
-add('bash', 'Bash · kabuk betiği', 'main.sh', {'bash'}, function()
+add('bash', 'Bash · shell script', 'main.sh', {'bash'}, function()
   return {['main.sh'] = '#!/usr/bin/env bash\nset -euo pipefail\n\nprintf "%s\\n" "Hello, world!"\n',
     ['Makefile'] = script_make('bash main.sh', 'bash -n main.sh'),
   }, actions({{'bash', 'main.sh'}}, {{'bash', '-n', 'main.sh'}})
@@ -276,7 +276,7 @@ add('r', 'R · RStudio projesi', 'main.R', {'Rscript'}, function(name)
   }, actions({{'Rscript', 'main.R'}}, {{'Rscript', '-e', 'parse(file = "main.R")'}})
 end)
 
-add('julia', 'Julia · proje ortamı', 'src/main.jl', {'julia'}, function()
+add('julia', 'Julia · project environment', 'src/main.jl', {'julia'}, function()
   return {['src/main.jl'] = 'println("Hello, world!")\n', ['Project.toml'] = '[deps]\n\n[compat]\njulia = "1.6"\n'},
     actions({{'julia', '--project=.', 'src/main.jl'}},
       {{'julia', '--project=.', '-e', 'Meta.parseall(read("src/main.jl", String))'}}, nil,
@@ -317,17 +317,17 @@ add('scala', 'Scala · sbt', 'src/main/scala/Main.scala', {'sbt', 'java'}, funct
     ['build.sbt'] = 'ThisBuild / scalaVersion := "3.3.6"\nThisBuild / version := "0.1.0"\n\nname := "' .. name .. '"\n',
     ['project/build.properties'] = 'sbt.version=1.10.7\n',
   }, actions({{'sbt', '-Dsbt.offline=true', 'run'}}, {{'sbt', '-Dsbt.offline=true', 'compile'}}, nil, {{'sbt', 'compile'}})
-end, 'JDK ve sbt gerekir. Önce kurulum eylemi sbt/Scala derleyicisini indirip önbelleğe alır.')
+end, 'Needs a JDK and sbt. The setup action first downloads and caches sbt and the Scala compiler.')
 
 add('clojure', 'Clojure · deps.edn', 'src/app/core.clj', {'clojure'}, function()
   return {
     ['deps.edn'] = '{:paths ["src"]\n :aliases {:run {:main-opts ["-m" "app.core"]}}}\n',
     ['src/app/core.clj'] = '(ns app.core)\n\n(defn -main [& _args]\n  (println "Hello, world!"))\n',
   }, actions({{'clojure', '-M:run'}}, {{'clojure', '-M', '-e', '(require (quote app.core))'}}, nil, {{'clojure', '-P', '-M:run'}})
-end, 'Clojure CLI (tools.deps) gerekir. İlk kullanımda kurulum eylemi CLI sürümünün Clojure bağımlılıklarını hazırlar.')
+end, 'Needs the Clojure CLI (tools.deps). On first use the setup action prepares the Clojure dependencies for that CLI version.')
 
 add('fsharp', 'F# · .NET konsol', 'Program.fs', {'dotnet'}, function(name) return dotnet(name, true) end,
-  '.NET 10 SDK gerekir. İlk çalıştırmadan önce kurulum eylemiyle dotnet restore çalıştır.')
+  'Needs the .NET 10 SDK. Run dotnet restore with the setup action before the first run.')
 
 add('fortran', 'Fortran · CMake', 'main.f90', {'cmake', 'gfortran'}, function(name)
   local build = {{'cmake', '-S', '.', '-B', 'build'}, {'cmake', '--build', 'build'}}
@@ -342,7 +342,7 @@ add('ocaml', 'OCaml · Dune', 'bin/main.ml', {'dune', 'ocamlc'}, function(name)
   return {['dune-project'] = '(lang dune 3.0)\n(name app_' .. snake(name) .. ')\n',
     ['bin/dune'] = '(executable\n (name main))\n', ['bin/main.ml'] = 'let () = print_endline "Hello, world!"\n',
   }, actions({{'dune', 'exec', './bin/main.exe'}}, {{'dune', 'build'}})
-end, 'OCaml ve Dune 3+ kurulu olmalı; bu şablon harici OCaml paketi kullanmaz.')
+end, 'Needs OCaml and Dune 3+; this template uses no external OCaml packages.')
 
 add('zig', 'Zig · 0.15 build', 'src/main.zig', {'zig'}, function()
   return {
@@ -354,22 +354,22 @@ add('zig', 'Zig · 0.15 build', 'src/main.zig', {'zig'}, function()
       .. '    const run = b.addRunArtifact(exe);\n    if (b.args) |args| run.addArgs(args);\n'
       .. '    b.step("run", "Run the application").dependOn(&run.step);\n}\n',
   }, actions({{'zig', 'build', 'run'}}, {{'zig', 'build'}}, {{'zig', 'test', 'src/main.zig'}})
-end, 'Zig 0.15.x için hazırlanmıştır; Zig sürümleri arasında standart kütüphane API değişebilir.')
+end, 'Written for Zig 0.15.x; the standard library API can change between Zig versions.')
 
 add('sql', 'SQL · SQLite', 'main.sql', {'sqlite3'}, function()
   return {
     ['main.sql'] = '-- Run in a temporary in-memory database by default.\nBEGIN;\nCREATE TABLE IF NOT EXISTS greetings (\n  id INTEGER PRIMARY KEY,\n  message TEXT NOT NULL\n);\nINSERT OR REPLACE INTO greetings (id, message) VALUES (1, \'Hello, world!\');\nSELECT message FROM greetings ORDER BY id;\nCOMMIT;\n',
     ['Makefile'] = script_make('sqlite3 :memory: ".read main.sql"', 'sqlite3 :memory: ".read main.sql"'),
   }, actions({{'sqlite3', '-bail', ':memory:', '.read main.sql'}}, {{'sqlite3', '-bail', ':memory:', '.read main.sql'}})
-end, 'Çalıştır ve derle eylemleri geçici bir bellek veritabanı kullanır. Veriyi saklamak için: sqlite3 app.db ".read main.sql"')
+end, 'The run and build actions use a temporary in-memory database. To keep the data: sqlite3 app.db ".read main.sql"')
 
 function M.list() return copy(entries) end
 
 function M.render(id, name)
   local entry = by_id[id]
-  if not entry then return nil, 'Bilinmeyen proje dili: ' .. tostring(id) end
+  if not entry then return nil, 'Unknown project language: ' .. tostring(id) end
   if type(name) ~= 'string' or not name:match('^[A-Za-z][A-Za-z0-9_-]*$') then
-    return nil, 'Geçersiz proje adı.'
+    return nil, 'Invalid project name.'
   end
   local spec = copy(entry.item)
   spec.files, spec.tasks = entry.render(name)

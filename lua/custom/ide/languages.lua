@@ -162,8 +162,8 @@ function M.java()
         require('dap')
         require('jdtls').setup_dap({hotcodereplace = 'auto'})
         require('jdtls.dap').setup_dap_main_class_configs()
-        vim.keymap.set('n', '<leader>ct', require('jdtls').test_nearest_method, {buffer = buf, desc = 'Java: en yakın testi debug et'})
-        vim.keymap.set('x', '<leader>cm', function() require('jdtls').extract_method(true) end, {buffer = buf, desc = 'Java: metot çıkar'})
+        vim.keymap.set('n', '<leader>ct', require('jdtls').test_nearest_method, {buffer = buf, desc = 'Java: debug nearest test'})
+        vim.keymap.set('x', '<leader>cm', function() require('jdtls').extract_method(true) end, {buffer = buf, desc = 'Java: extract method'})
       end,
     })
   end

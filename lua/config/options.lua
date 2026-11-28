@@ -1,4 +1,6 @@
 local opt, g = vim.opt, vim.g
+-- Neovim's own messages in English; LANG and the keyboard stay Turkish.
+pcall(vim.cmd.language, "messages", "en_US.UTF-8")
 -- Keep NASM detection independent of optional practice tools.
 vim.filetype.add({extension = {asm = 'nasm', nasm = 'nasm'}})
 -- User-local language tools are also available from desktop-launched editors.

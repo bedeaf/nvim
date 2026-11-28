@@ -36,12 +36,12 @@ end
 
 function M.run(action)
   if vim.fn.executable('dotnet') ~= 1 then
-    vim.notify('.NET SDK bulunamadı.', vim.log.levels.ERROR)
+    vim.notify('.NET SDK not found.', vim.log.levels.ERROR)
     return
   end
   local targets = M.targets(action)
   if #targets == 0 then
-    vim.notify('Önce bir C# projesinden dosya aç (.csproj / .sln / .slnx).', vim.log.levels.WARN)
+    vim.notify('Open a file from a C# project first (.csproj / .sln / .slnx).', vim.log.levels.WARN)
     return
   end
   local function launch(target)
@@ -49,7 +49,7 @@ function M.run(action)
     -- Do not silently build old on-disk code or save unrelated buffers.
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
       if vim.bo[buf].buftype == '' and vim.bo[buf].modified then
-        vim.notify('Önce değişiklikleri kaydet: Space Space veya :wall', vim.log.levels.WARN)
+        vim.notify('Save your changes first: Space Space or :wall', vim.log.levels.WARN)
         return
       end
     end
@@ -61,14 +61,14 @@ function M.run(action)
     }}, {name = 'dotnet ' .. action .. ': ' .. vim.fs.basename(target)})
   end
   if #targets == 1 then launch(targets[1]) else
-    vim.ui.select(targets, { prompt = 'dotnet ' .. action .. ' — proje seç:' }, launch)
+    vim.ui.select(targets, { prompt = 'dotnet ' .. action .. ' — choose project:' }, launch)
   end
 end
 
 function M.setup()
   local actions = {
-    { 'Build', 'b', 'Derle' }, { 'Run', 'r', 'Çalıştır' },
-    { 'Test', 't', 'Testleri çalıştır' }, { 'Restore', 's', 'NuGet paketlerini yükle' },
+    { 'Build', 'b', 'Build' }, { 'Run', 'r', 'Run' },
+    { 'Test', 't', 'Run tests' }, { 'Restore', 's', 'Restore NuGet packages' },
   }
   for _, item in ipairs(actions) do
     local action = item[1]:lower()

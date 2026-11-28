@@ -17,15 +17,15 @@ local function write(root, name, content)
   local fd = assert(vim.uv.fs_open(path, 'wx', 420))
   local written, err = vim.uv.fs_write(fd, content, 0)
   vim.uv.fs_close(fd)
-  assert(written == #content, err or ('Dosya yazılamadı: ' .. path))
+  assert(written == #content, err or ('Could not write file: ' .. path))
 end
 
 local function readme(spec, name)
-  local lines = {'# ' .. name, '', spec.label .. ' başlangıç projesi.', '',
-    'Gerekli araçlar: ' .. table.concat(spec.tools, ', '), '', spec.notes or '', '',
-    'Neovim: F6 / Space rr çalıştırır; Space rb derler; Space rt testleri çalıştırır.',
-    'Space ri tanımlı proje bağımlılıklarını kurar. SDK/derleyiciyi ayrıca kurmalısın.',
-    'Çalıştırma öncesinde bu projedeki adlandırılmış dosyalar kaydedilir.', '', '## Komutlar', ''}
+  local lines = {'# ' .. name, '', spec.label .. ' starter project.', '',
+    'Required tools: ' .. table.concat(spec.tools, ', '), '', spec.notes or '', '',
+    'Neovim: F6 / Space rr runs; Space rb builds; Space rt runs the tests.',
+    'Space ri installs the declared project dependencies. Install the SDK/compiler yourself.',
+    'Named files in this project are saved before running.', '', '## Commands', ''}
   for _, action in ipairs({'setup', 'run', 'build', 'test'}) do
     if spec.tasks[action] then
       vim.list_extend(lines, {'### ' .. action, '', '```sh'})
@@ -36,11 +36,11 @@ local function readme(spec, name)
     end
   end
   vim.list_extend(lines, {
-    'Komutlar proje kökünde çalışır. Neovim F6 görevleri `.nvim-project.json` içindedir.',
-    'Her komut bir argüman dizisidir; adımlar sırayla, yalnız önceki adım başarılıysa çalışır.',
-    'Özel görevler ekleyebilir veya `.vscode/tasks.json` görevlerini Space ra ile seçebilirsin.',
-    'Test görevi bulunmayan şablonlarda test altyapısını seçip bir test görevi ekle.', '',
-    'Space e: dosyalar · Space /: proje araması · F7: terminal · Space bs: oturumu kaydet', '',
+    'Commands run in the project root. Neovim F6 tasks live in `.nvim-project.json`.',
+    'Each command is an argument array; steps run in order, each only if the previous one succeeded.',
+    'You can add custom tasks or pick `.vscode/tasks.json` tasks with Space ra.',
+    'For templates without a test task, pick a test framework and add one.', '',
+    'Space e: files · Space /: project search · F7: terminal · Space bs: save session', '',
   })
   return table.concat(lines, '\n')
 end
@@ -51,18 +51,18 @@ function M.create(id, parent, name, callback)
   local spec, render_error = registry.render(id, name)
   if not spec then return fail(render_error) end
   if id == 'python' and not name:match('[A-Za-z0-9]$') then
-    return fail('Python proje adı harf veya rakamla bitmeli.')
+    return fail('A Python project name must end with a letter or digit.')
   end
-  if type(parent) ~= 'string' or vim.trim(parent) == '' then return fail('Konum boş olamaz.') end
+  if type(parent) ~= 'string' or vim.trim(parent) == '' then return fail('The location cannot be empty.') end
   if parent == '~' then parent = vim.env.HOME
   elseif parent:sub(1, 2) == '~/' then parent = vim.env.HOME .. parent:sub(2) end
   parent = vim.fn.fnamemodify(parent, ':p'):gsub('/$', '')
   local root = parent .. '/' .. name
-  if vim.uv.fs_lstat(root) then return fail('Bu yol zaten var; başka bir proje adı seç: ' .. root) end
+  if vim.uv.fs_lstat(root) then return fail('This path already exists; choose another project name: ' .. root) end
   local ok, err = pcall(vim.fn.mkdir, parent == '' and '/' or parent, 'p')
   if not ok then return fail(tostring(err)) end
   local made, message = vim.uv.fs_mkdir(root, 493)
-  if not made then return fail('Klasör oluşturulamadı: ' .. tostring(message)) end
+  if not made then return fail('Could not create folder: ' .. tostring(message)) end
   local saved, write_error = pcall(function()
     for file, content in pairs(spec.files) do write(root, file, content) end
     write(root, '.nvim-project.json', vim.json.encode({version = 1, template = id, name = name,
@@ -75,14 +75,14 @@ function M.create(id, parent, name, callback)
     }, '\n'))
     write(root, 'README.md', readme(spec, name))
   end)
-  if not saved then return fail('Proje tamamlanamadı (' .. root .. '): ' .. tostring(write_error)) end
+  if not saved then return fail('Could not finish the project (' .. root .. '): ' .. tostring(write_error)) end
   callback(root)
 end
 
 local function clean_buffers()
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
     if vim.bo[buf].modified then
-      vim.notify('Önce değişiklikleri kaydet: Space Space veya :wall', vim.log.levels.WARN)
+      vim.notify('Save your changes first: Space Space or :wall', vim.log.levels.WARN)
       return false
     end
   end
@@ -92,22 +92,22 @@ end
 function M.open()
   if not clean_buffers() then return end
   local origin_buf, origin_win, origin_cwd = vim.api.nvim_get_current_buf(), vim.api.nvim_get_current_win(), vim.fn.getcwd()
-  vim.ui.select(registry.list(), {prompt = 'Yeni proje · dil veya framework ara:', format_item = function(item)
+  vim.ui.select(registry.list(), {prompt = 'New project · search language or framework:', format_item = function(item)
     local missing = missing_tools(item)
-    return item.label .. (#missing > 0 and ('  (araç eksik: ' .. table.concat(missing, ', ') .. ')') or '')
+    return item.label .. (#missing > 0 and ('  (missing tools: ' .. table.concat(missing, ', ') .. ')') or '')
   end}, function(item)
     if not item then return end
-    vim.ui.input({prompt = 'Proje adı: '}, function(name)
+    vim.ui.input({prompt = 'Project name: '}, function(name)
       if not name or vim.trim(name) == '' then return end
       name = vim.trim(name)
-      vim.ui.input({prompt = 'Üst klasör: ', default = vim.g.project_home or '~/Projeler', completion = 'dir'}, function(parent)
+      vim.ui.input({prompt = 'Parent folder: ', default = vim.g.project_home or '~/Projeler', completion = 'dir'}, function(parent)
         if not parent or vim.trim(parent) == '' then return end
         M.create(item.id, parent, name, function(root, err)
-          if not root then vim.notify(err, vim.log.levels.ERROR, {title = 'Yeni proje'}); return end
+          if not root then vim.notify(err, vim.log.levels.ERROR, {title = 'New project'}); return end
           -- A slow tool must not steal focus from work started while it ran.
           if vim.api.nvim_get_current_buf() ~= origin_buf or vim.api.nvim_get_current_win() ~= origin_win
               or vim.fn.getcwd() ~= origin_cwd or not clean_buffers() then
-            vim.notify('Proje oluşturuldu: ' .. root .. '\nAna dosya: ' .. item.main)
+            vim.notify('Project created: ' .. root .. '\nMain file: ' .. item.main)
             return
           end
           local opened, open_error = pcall(function()
@@ -115,12 +115,12 @@ function M.open()
             vim.cmd.edit(vim.fn.fnameescape(root .. '/' .. item.main))
           end)
           if not opened then
-            vim.notify('Proje oluşturuldu: ' .. root .. '\nDosya açılamadı: ' .. tostring(open_error), vim.log.levels.WARN)
+            vim.notify('Project created: ' .. root .. '\nCould not open file: ' .. tostring(open_error), vim.log.levels.WARN)
             return
           end
           -- A long/multiline :echo causes a blocking hit-enter prompt when
           -- Noice is disabled. The opened source already identifies the project.
-          vim.notify('Proje hazır')
+          vim.notify('Project ready')
         end)
       end)
     end)
@@ -128,9 +128,9 @@ function M.open()
 end
 
 function M.setup()
-  vim.api.nvim_create_user_command('ProjeYeni', M.open, {desc = 'Dil seçerek yeni proje oluştur'})
-  vim.keymap.set('n', '<leader>cn', M.open, {desc = 'Yeni proje oluştur'})
-  vim.keymap.set('n', '<C-n>', M.open, {desc = 'Yeni proje oluştur'})
+  vim.api.nvim_create_user_command('ProjeYeni', M.open, {desc = 'Create a new project by language'})
+  vim.keymap.set('n', '<leader>cn', M.open, {desc = 'Create new project'})
+  vim.keymap.set('n', '<C-n>', M.open, {desc = 'Create new project'})
 end
 
 return M

@@ -16,16 +16,16 @@ function M.plan(action, buf)
   local function step(cmd, compiler) return {cmd = cmd, cwd = root, compiler = compiler} end
   if has('package.json') then
     local ok, package = pcall(function() return vim.json.decode(table.concat(vim.fn.readfile(root .. '/package.json'), '\n')) end)
-    if not ok or type(package) ~= 'table' then return nil, 'package.json okunamadı.' end
+    if not ok or type(package) ~= 'table' then return nil, 'Could not read package.json.' end
     local manager = has('pnpm-lock.yaml') and 'pnpm' or has('yarn.lock') and 'yarn'
       or (has('bun.lock') or has('bun.lockb')) and 'bun' or 'npm'
     if action == 'setup' then return {step({manager, 'install'})} end
     local scripts = type(package.scripts) == 'table' and package.scripts or {}
     local script = action == 'run' and (scripts.start and 'start' or scripts.dev and 'dev') or action
     if script and scripts[script] then return {step({manager, 'run', script})} end
-    return nil, 'package.json içinde ' .. action .. ' betiği yok. Space ra ile bir proje görevi seç.'
+    return nil, 'package.json has no ' .. action .. ' script. Pick a project task with Space ra.'
   end
-  if action == 'setup' then return nil, 'Bu proje için kurulum görevi tanımlı değil. Space ra ile görev seç.' end
+  if action == 'setup' then return nil, 'This project has no setup task. Pick a task with Space ra.' end
   if has('Cargo.toml') then return {step({'cargo', action}, 'cargo')} end
   if has('go.mod') or has('go.work') then
     return {step({'go', action, action == 'run' and '.' or './...'}, 'go')}
@@ -106,7 +106,7 @@ function M.available(plan)
   end
   for _, exe in ipairs(plan.tools or {}) do check(exe, plan[1].cwd, false) end
   for i, spec in ipairs(plan) do check(spec.cmd[1], spec.cwd, i > 1) end
-  if #missing > 0 then return false, 'Gerekli araç bulunamadı: ' .. table.concat(missing, ', ') .. '. Proje dosyaları hazır; aracı kurduktan sonra tekrar dene.' end
+  if #missing > 0 then return false, 'Required tool not found: ' .. table.concat(missing, ', ') .. '. The project files are ready; try again after installing it.' end
   return true
 end
 
@@ -235,7 +235,7 @@ function M.start(plan, opts)
   local previous, previous_buf, previous_wins = M.last_task, output_buf, output_windows()
   M.stop()
   local task = require('overseer').new_task({
-    name = opts.name or plan[1].name or ('Görev: ' .. (buf and vim.fs.basename(vim.api.nvim_buf_get_name(buf)) or plan[1].cmd[1])),
+    name = opts.name or plan[1].name or ('Task: ' .. (buf and vim.fs.basename(vim.api.nvim_buf_get_name(buf)) or plan[1].cmd[1])),
     cmd = {'sh', '-c', table.concat(chain, ' && ')}, cwd = plan[1].cwd,
     components = components, strategy = {'jobstart', use_terminal = true},
   })
@@ -263,8 +263,8 @@ function M.start(plan, opts)
     vim.api.nvim_buf_set_name(output_buf, 'ide://output')
     vim.bo[output_buf].bufhidden = 'hide'
     vim.b[output_buf].workflow_root = plan[1].cwd
-    vim.keymap.set('t', '<Esc>', '<C-\\><C-n>', {buffer = output_buf, desc = 'Çıktıda normal moda dön'})
-    vim.keymap.set('n', 'q', hide_output, {buffer = output_buf, desc = 'Çıktıyı gizle'})
+    vim.keymap.set('t', '<Esc>', '<C-\\><C-n>', {buffer = output_buf, desc = 'Output: back to normal mode'})
+    vim.keymap.set('n', 'q', hide_output, {buffer = output_buf, desc = 'Hide output'})
   end
   if opts.open ~= false then show_output() end
   focus_source()
@@ -283,7 +283,7 @@ function M.run(action, opts)
   local available, message = M.available(plan)
   if not available then vim.notify(message, vim.log.levels.WARN); return end
   vim.fn.mkdir(vim.fs.dirname(M.native_binary(buf)), 'p')
-  local label = ({run = 'Çalıştır', build = 'Derle', test = 'Test', setup = 'Bağımlılıkları kur'})[action] or action
+  local label = ({run = 'Run', build = 'Build', test = 'Test', setup = 'Install dependencies'})[action] or action
   return M.start(plan, vim.tbl_extend('force', {
     buf = buf, name = label .. ': ' .. vim.fs.basename(vim.api.nvim_buf_get_name(buf)),
   }, opts or {}))
@@ -294,33 +294,33 @@ function M.check_build()
   if not buf then return end
   local root = project.root(buf)
   if vim.fn.filereadable(root .. '/CMakeLists.txt') == 0 then
-    vim.notify('Derleme önizlemesi CMake projeleri içindir.', vim.log.levels.WARN)
+    vim.notify('Build preview is for CMake projects.', vim.log.levels.WARN)
     return
   end
   if not project.save(root) then return end
   return M.start({{cmd = {'python3', vim.fn.stdpath('config') .. '/scripts/native_build.py',
-    '--root', root, 'check'}, cwd = root}}, {buf = buf, name = 'Derleme önizlemesi'})
+    '--root', root, 'check'}, cwd = root}}, {buf = buf, name = 'Build preview'})
 end
 
 function M.setup()
   local function map(key, fn, desc) vim.keymap.set('n', key, fn, {desc = desc}) end
-  map('<leader>rr', function() M.run('run') end, 'Çalıştır')
-  map('<leader>rB', M.check_build, 'Nelerin derleneceğini göster')
-  map('<leader>rb', function() M.run('build') end, 'Projeyi derle')
-  map('<leader>rt', function() M.run('test') end, 'Proje testleri')
-  map('<leader>ri', function() M.run('setup') end, 'Proje bağımlılıklarını kur')
+  map('<leader>rr', function() M.run('run') end, 'Run')
+  map('<leader>rB', M.check_build, 'Show what will be built')
+  map('<leader>rb', function() M.run('build') end, 'Build project')
+  map('<leader>rt', function() M.run('test') end, 'Project tests')
+  map('<leader>ri', function() M.run('setup') end, 'Install project dependencies')
   map('<leader>ra', function()
     if project.saved() then require('overseer').run_task({cwd = project.root()}) end
-  end, 'Proje görevini seç')
-  map('<leader>rl', M.toggle_output, 'Çıktıyı göster / gizle')
-  map('<leader>rx', M.stop, 'Programı durdur')
-  map('<F6>', function() M.run('run') end, 'Çalıştır')
-  map('<S-F6>', M.stop, 'Programı durdur')
-  vim.api.nvim_create_user_command('IDEBuildCheck', M.check_build, {desc = 'CMake derleme önizlemesi'})
-  vim.api.nvim_create_user_command('IDERun', function() M.run('run') end, {desc = 'Dosyayı/projeyi çalıştır'})
-  vim.api.nvim_create_user_command('IDEBuild', function() M.run('build') end, {desc = 'Projeyi derle'})
-  vim.api.nvim_create_user_command('IDETest', function() M.run('test') end, {desc = 'Proje testleri'})
-  vim.api.nvim_create_user_command('IDESetup', function() M.run('setup') end, {desc = 'Proje bağımlılıklarını kur'})
+  end, 'Choose project task')
+  map('<leader>rl', M.toggle_output, 'Show / hide output')
+  map('<leader>rx', M.stop, 'Stop program')
+  map('<F6>', function() M.run('run') end, 'Run')
+  map('<S-F6>', M.stop, 'Stop program')
+  vim.api.nvim_create_user_command('IDEBuildCheck', M.check_build, {desc = 'CMake build preview'})
+  vim.api.nvim_create_user_command('IDERun', function() M.run('run') end, {desc = 'Run file / project'})
+  vim.api.nvim_create_user_command('IDEBuild', function() M.run('build') end, {desc = 'Build project'})
+  vim.api.nvim_create_user_command('IDETest', function() M.run('test') end, {desc = 'Project tests'})
+  vim.api.nvim_create_user_command('IDESetup', function() M.run('setup') end, {desc = 'Install project dependencies'})
 end
 
 return M

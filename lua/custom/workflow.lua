@@ -33,7 +33,7 @@ function M.paths(root)
 end
 
 local function warn(message)
-  vim.notify(message, vim.log.levels.WARN, { title = 'Projeye devam' })
+  vim.notify(message, vim.log.levels.WARN, { title = 'Resume project' })
 end
 
 local function remember(root)
@@ -45,7 +45,7 @@ end
 function M.save(quiet, root)
   if modified() then
     if not quiet then
-      warn('Önce değişiklikleri kaydet. Geçerli dosya: Space Space; tüm dosyalar: :wall')
+      warn('Save your changes first. Current file: Space Space; all files: :wall')
     end
     return false
   end
@@ -59,7 +59,7 @@ function M.save(quiet, root)
     end
   end
   if not files then
-    if not quiet then warn('Önce projeden bir dosya aç.') end
+    if not quiet then warn('Open a project file first.') end
     return false
   end
   local paths = M.paths(root)
@@ -76,17 +76,17 @@ function M.save(quiet, root)
   vim.o.sessionoptions = options
   vim.cmd.cd(vim.fn.fnameescape(cwd))
   if not ok then
-    if not quiet then warn('Oturum kaydedilemedi: ' .. tostring(err)) end
+    if not quiet then warn('Could not save session: ' .. tostring(err)) end
     return false
   end
   active_root = root
-  if not quiet then vim.notify('Oturum kaydedildi. Devam etmek için Space b r.') end
+  if not quiet then vim.notify('Session saved. Space b r resumes it.') end
   return true
 end
 
 function M.resume()
   if modified() then
-    warn('Kaydedilmemiş değişiklikler var. Önce kaydet; açık çalışman korunuyor.')
+    warn('There are unsaved changes. Save first; your open work is kept.')
     return false
   end
   local root = M.root()
@@ -102,19 +102,19 @@ function M.resume()
     end
   end
   if vim.fn.isdirectory(root) == 0 or vim.fn.filereadable(paths.session) == 0 then
-    warn('Bu proje için oturum yok. Dosyalarını açıp Space b s ile kaydet.')
+    warn('No session for this project. Open its files and save with Space b s.')
     return false
   end
   restoring = true
   local ok, err = pcall(vim.cmd, 'source ' .. vim.fn.fnameescape(paths.session))
   restoring = false
   if not ok then
-    warn('Oturum açılamadı: ' .. tostring(err))
+    warn('Could not open session: ' .. tostring(err))
     return false
   end
   active_root = root
   remember(root)
-  vim.notify('Projeye döndün. Sıradaki küçük adım: Space a.')
+  vim.notify('Back in the project. Next small step: Space a.')
   return true
 end
 
@@ -130,7 +130,7 @@ function M.note()
   if vim.fn.filereadable(paths.note) == 0 and vim.api.nvim_buf_line_count(0) == 1
       and vim.api.nvim_get_current_line() == '' then
     vim.api.nvim_buf_set_lines(0, 0, -1, false, {
-      '# Sıradaki küçük adım', '', '- [ ] ', '', 'Kaldığım yer: ',
+      '# Next small step', '', '- [ ] ', '', 'Where I stopped: ',
     })
     vim.api.nvim_win_set_cursor(0, { 3, 6 })
   end
@@ -160,11 +160,11 @@ function M.open_recent()
   local root = M.root()
   local files = M.recent_files(root)
   if #files == 0 then
-    vim.notify('Bu projede henüz son dosya yok. Space e ile bir dosya aç.')
+    vim.notify('No recent files in this project yet. Open one with Space e.')
     return
   end
   vim.ui.select(files, {
-    prompt = 'Projenin son dosyaları:',
+    prompt = 'Recent project files:',
     format_item = function(file) return file:sub(#root + 2) end,
   }, function(file)
     if file then vim.cmd.edit(vim.fn.fnameescape(file)) end
@@ -210,10 +210,10 @@ function M.setup()
   for name, fn in pairs(commands) do
     vim.api.nvim_create_user_command(name, function() fn() end, {})
   end
-  vim.keymap.set('n', '<leader>bs', function() M.save() end, { desc = 'Proje oturumunu kaydet' })
-  vim.keymap.set('n', '<leader>br', M.resume, { desc = 'Projeye kaldığın yerden devam et' })
-  vim.keymap.set('n', '<leader>bo', M.open_recent, { desc = 'Projenin son dosyaları' })
-  vim.keymap.set('n', '<leader>a', M.note, { desc = 'Sıradaki küçük adım' })
+  vim.keymap.set('n', '<leader>bs', function() M.save() end, { desc = 'Save project session' })
+  vim.keymap.set('n', '<leader>br', M.resume, { desc = 'Resume project where you left off' })
+  vim.keymap.set('n', '<leader>bo', M.open_recent, { desc = 'Recent project files' })
+  vim.keymap.set('n', '<leader>a', M.note, { desc = 'Next small step' })
 end
 
 return M

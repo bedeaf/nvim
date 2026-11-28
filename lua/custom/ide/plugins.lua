@@ -4,8 +4,8 @@ return {
   {'rafamadriz/friendly-snippets', lazy = true},
   {'folke/which-key.nvim', event = 'VeryLazy', opts = {
     delay = 450, preset = 'classic', icons = {mappings = false, group = '+', separator = '->'},
-    spec = {{'<leader>c', group = 'Kod / proje'}, {'<leader>r', group = 'Çalıştır / debug'},
-      {'<leader>x', group = 'Hatalar'}, {'<leader>b', group = 'Dosyalar / oturum'}, {'<leader>m', group = 'AtCoder'}},
+    spec = {{'<leader>c', group = 'Code / project'}, {'<leader>r', group = 'Run / debug'},
+      {'<leader>x', group = 'Diagnostics'}, {'<leader>b', group = 'Files / session'}, {'<leader>m', group = 'AtCoder'}},
   }},
   {'stevearc/oil.nvim', cmd = 'Oil', opts = {
     columns = {}, delete_to_trash = true, skip_confirm_for_simple_edits = false,

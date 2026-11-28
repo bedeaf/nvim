@@ -69,7 +69,7 @@ function M.saved(root)
     local name = vim.api.nvim_buf_get_name(buf)
     if vim.bo[buf].buftype == '' and vim.bo[buf].modified
         and (name == '' or M.inside(name, root)) then
-      vim.notify('Önce proje değişikliklerini kaydet: Space Space veya :wall', vim.log.levels.WARN)
+      vim.notify('Save project changes first: Space Space or :wall', vim.log.levels.WARN)
       return false
     end
   end
@@ -84,7 +84,7 @@ function M.save(root)
     local name = vim.api.nvim_buf_get_name(buf)
     if vim.bo[buf].buftype == '' and vim.bo[buf].modified and (name == '' or M.inside(name, root)) then
       if name == '' or vim.bo[buf].readonly then
-        vim.notify(name == '' and 'Önce adsız dosyayı Ctrl s ile kaydet.' or ('Salt okunur dosya kaydedilemedi: ' .. name), vim.log.levels.WARN)
+        vim.notify(name == '' and 'Save the unnamed file with Ctrl s first.' or ('Could not save read-only file: ' .. name), vim.log.levels.WARN)
         return false
       end
       pending[#pending + 1] = buf
@@ -93,7 +93,7 @@ function M.save(root)
   for _, buf in ipairs(pending) do
     local ok, err = pcall(vim.api.nvim_buf_call, buf, function() vim.cmd('silent update') end)
     if not ok or vim.bo[buf].modified then
-      vim.notify('Çalıştırmadan önce kayıt başarısız: ' .. tostring(err or vim.api.nvim_buf_get_name(buf)), vim.log.levels.ERROR)
+      vim.notify('Saving before running failed: ' .. tostring(err or vim.api.nvim_buf_get_name(buf)), vim.log.levels.ERROR)
       return false
     end
   end

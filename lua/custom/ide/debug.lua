@@ -18,12 +18,12 @@ function M.setup()
       end
       return expand(configs)
     end
-    vim.notify('launch.json okunamadı: ' .. tostring(configs), vim.log.levels.WARN)
+    vim.notify('Could not read launch.json: ' .. tostring(configs), vim.log.levels.WARN)
     return {}
   end
   dap.adapters.codelldb = {type = 'server', port = '${port}', executable = {command = 'codelldb', args = {'--port', '${port}'}}}
   local native = {
-    name = 'Derlenmiş programı seç', type = 'codelldb', request = 'launch',
+    name = 'Choose the built program', type = 'codelldb', request = 'launch',
     program = function() return vim.fn.input('Program: ', project.root() .. '/', 'file') end,
     cwd = project.root, stopOnEntry = false,
   }
@@ -38,14 +38,14 @@ function M.setup()
     command = 'js-debug-adapter', args = {'${port}', '127.0.0.1'},
   }}
   for _, ft in ipairs({'javascript', 'javascriptreact', 'typescript', 'typescriptreact'}) do
-    dap.configurations[ft] = {{name = 'Node: dosyayı çalıştır', type = 'pwa-node', request = 'launch',
+    dap.configurations[ft] = {{name = 'Node: run file', type = 'pwa-node', request = 'launch',
       program = '${file}', cwd = project.root, sourceMaps = true, console = 'integratedTerminal',
       skipFiles = {'<node_internals>/**'}}}
   end
   dap.adapters.go = {type = 'server', port = '${port}', executable = {command = 'dlv', args = {'dap', '-l', '127.0.0.1:${port}'}}}
-  dap.configurations.go = {{type = 'go', name = 'Go: paketi debug et', request = 'launch', program = '${fileDirname}', cwd = project.root}}
+  dap.configurations.go = {{type = 'go', name = 'Go: debug package', request = 'launch', program = '${fileDirname}', cwd = project.root}}
   dap.adapters.coreclr = {type = 'executable', command = 'netcoredbg', args = {'--interpreter=vscode'}}
-  dap.configurations.cs = {{type = 'coreclr', name = '.NET: derlenmiş DLL seç', request = 'launch',
+  dap.configurations.cs = {{type = 'coreclr', name = '.NET: choose built DLL', request = 'launch',
     program = function() return vim.fn.input('Debug DLL: ', project.root() .. '/bin/Debug/', 'file') end,
     cwd = project.root, stopAtEntry = false}}
   for name, sign in pairs({DapBreakpoint = 'B', DapBreakpointCondition = '?', DapStopped = '>'}) do
@@ -74,7 +74,7 @@ function M.start()
       if not success then return end
       local binary = root .. '/build/app'
       if vim.fn.executable(binary) ~= 1 then
-        vim.notify('Debug programı bulunamadı: ' .. binary .. '. Özel hedef için .vscode/launch.json kullan.', vim.log.levels.WARN)
+        vim.notify('Debug program not found: ' .. binary .. '. Use .vscode/launch.json for a custom target.', vim.log.levels.WARN)
         return
       end
       dap.run({name = vim.fs.basename(root), type = 'codelldb', request = 'launch',
@@ -96,19 +96,19 @@ end
 
 function M.keys()
   local function map(key, fn, desc) vim.keymap.set('n', key, fn, {desc = desc}) end
-  map('<F5>', M.start, 'Debug başlat / devam et')
-  map('<F9>', function() require('dap').toggle_breakpoint() end, 'Breakpoint koy / kaldır')
-  map('<F10>', function() require('dap').step_over() end, 'Debug: sonraki satır')
-  map('<F11>', function() require('dap').step_into() end, 'Debug: fonksiyona gir')
-  map('<S-F11>', function() require('dap').step_out() end, 'Debug: fonksiyondan çık')
-  map('<leader>rd', M.start, 'Debug başlat / devam et')
-  map('<leader>rp', function() require('dap').toggle_breakpoint() end, 'Breakpoint koy / kaldır')
-  map('<leader>ro', function() require('dap').step_over() end, 'Debug: sonraki satır')
-  map('<leader>rj', function() require('dap').step_into() end, 'Debug: fonksiyona gir')
-  map('<leader>ru', function() require('dap').step_out() end, 'Debug: fonksiyondan çık')
-  map('<leader>rv', function() require('dap'); require('dap-view').toggle() end, 'Değişkenler / çağrı yığını')
-  map('<leader>rq', function() require('dap').terminate() end, 'Debug oturumunu bitir')
-  map('<leader>re', function() require('dap.ui.widgets').hover() end, 'İmleç altındaki değeri incele')
+  map('<F5>', M.start, 'Start / continue debugging')
+  map('<F9>', function() require('dap').toggle_breakpoint() end, 'Toggle breakpoint')
+  map('<F10>', function() require('dap').step_over() end, 'Debug: step over')
+  map('<F11>', function() require('dap').step_into() end, 'Debug: step into')
+  map('<S-F11>', function() require('dap').step_out() end, 'Debug: step out')
+  map('<leader>rd', M.start, 'Start / continue debugging')
+  map('<leader>rp', function() require('dap').toggle_breakpoint() end, 'Toggle breakpoint')
+  map('<leader>ro', function() require('dap').step_over() end, 'Debug: step over')
+  map('<leader>rj', function() require('dap').step_into() end, 'Debug: step into')
+  map('<leader>ru', function() require('dap').step_out() end, 'Debug: step out')
+  map('<leader>rv', function() require('dap'); require('dap-view').toggle() end, 'Variables / call stack')
+  map('<leader>rq', function() require('dap').terminate() end, 'End debug session')
+  map('<leader>re', function() require('dap.ui.widgets').hover() end, 'Inspect value under cursor')
 end
 
 return M

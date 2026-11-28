@@ -66,7 +66,7 @@ return {
         diagnostics = {Error = 'E', Warn = 'W', Info = 'I', Hint = 'H'},
         ui = {live = '*', selected = '+', unselected = ' '}},
       sources = {explorer = {
-        title = 'Proje dosyaları',
+        title = 'Project files',
         -- Start in the search field so typing filters files right away.
         focus = 'input',
         -- While searching, upstream's Enter only reveals the match in the
@@ -99,9 +99,9 @@ return {
     opts.icons = {mappings = false, group = '+', separator = '->',
       keys = {Space = 'Space', Esc = 'Esc', BS = 'BS', CR = 'Enter', Tab = 'Tab'}}
     opts.spec = {
-      {'<leader>c', group = 'Kod / proje'}, {'<leader>r', group = 'Çalıştır / debug'},
-      {'<leader>x', group = 'Hatalar'}, {'<leader>b', group = 'Dosyalar / oturum'},
-      {'<leader>f', group = 'Dosya bul'},
+      {'<leader>c', group = 'Code / project'}, {'<leader>r', group = 'Run / debug'},
+      {'<leader>x', group = 'Diagnostics'}, {'<leader>b', group = 'Files / session'},
+      {'<leader>f', group = 'Find'},
       {'<leader>m', group = 'Exercism'},
     }
   end},

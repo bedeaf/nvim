@@ -11,30 +11,30 @@ end
 
 function M.info()
   local lines = {
-    '# Geliştirme ortamı', '',
-    'Proje: ' .. require('custom.ide.project').root(),
-    'Dosya türü: ' .. vim.bo.filetype,
-    'Python: ' .. require('custom.ide.project').python(), '', 'Bağlı dil sunucuları:',
+    '# Development environment', '',
+    'Project: ' .. require('custom.ide.project').root(),
+    'File type: ' .. vim.bo.filetype,
+    'Python: ' .. require('custom.ide.project').python(), '', 'Attached language servers:',
   }
   for _, c in ipairs(vim.lsp.get_clients({bufnr = 0})) do
-    lines[#lines + 1] = ('- %s — %s'):format(c.name, c.root_dir or 'tek dosya')
+    lines[#lines + 1] = ('- %s — %s'):format(c.name, c.root_dir or 'single file')
   end
   lines[#lines + 1] = ''
-  lines[#lines + 1] = 'Araçlar (eksikleri :Mason ile kurabilirsin):'
+  lines[#lines + 1] = 'Tools (install missing ones with :Mason):'
   for _, exe in ipairs(require('custom.ide.languages').executables) do
     local path = vim.fn.exepath(exe)
-    lines[#lines + 1] = ('- %s: %s'):format(exe, path ~= '' and path or 'KURULU DEĞİL')
+    lines[#lines + 1] = ('- %s: %s'):format(exe, path ~= '' and path or 'NOT INSTALLED')
   end
-  vim.list_extend(lines, {'', ':checkhealth vim.lsp — ayrıntılı LSP durumu',
-    ':ConformInfo — biçimlendiriciler', ':Mason — araç yöneticisi',
-    ':OverseerRun — proje görevleri', ':help dap — hata ayıklama',
-    'Space ? — günlük tuşlar; Space tuşundan sonra bekle — komut menüsü'})
+  vim.list_extend(lines, {'', ':checkhealth vim.lsp — detailed LSP status',
+    ':ConformInfo — formatters', ':Mason — tool manager',
+    ':OverseerRun — project tasks', ':help dap — debugging',
+    'Space ? — everyday keys; wait after Space — command menu'})
   vim.cmd.new()
   local buf = vim.api.nvim_get_current_buf()
   vim.bo[buf].buftype, vim.bo[buf].bufhidden, vim.bo[buf].swapfile = 'nofile', 'wipe', false
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
   vim.bo[buf].filetype, vim.bo[buf].modifiable = 'markdown', false
-  vim.keymap.set('n', 'q', '<cmd>close<cr>', {buffer = buf, desc = 'Kapat'})
+  vim.keymap.set('n', 'q', '<cmd>close<cr>', {buffer = buf, desc = 'Close'})
 end
 
 function M.attach(client, buf)
@@ -42,30 +42,30 @@ function M.attach(client, buf)
     vim.keymap.set(mode, key, fn, {buffer = buf, silent = true, desc = desc})
   end
   local lsp = vim.lsp.buf
-  map('n', 'gd', lsp.definition, 'Tanıma git')
-  map('n', 'gD', lsp.declaration, 'Bildirime git')
-  map('n', 'gr', function() require('mini.extra').pickers.lsp({scope = 'references'}) end, 'Kullanımları bul')
-  map('n', 'gi', lsp.implementation, 'Uygulamaya git')
-  map('n', 'gy', lsp.type_definition, 'Tür tanımına git')
-  map('n', 'K', lsp.hover, 'Belgelendirme')
-  map('n', '<leader>rn', lsp.rename, 'Sembolü yeniden adlandır')
-  map({'n', 'x'}, '<leader>ca', lsp.code_action, 'Kod düzeltmesi / refactoring')
+  map('n', 'gd', lsp.definition, 'Go to definition')
+  map('n', 'gD', lsp.declaration, 'Go to declaration')
+  map('n', 'gr', function() require('mini.extra').pickers.lsp({scope = 'references'}) end, 'Find references')
+  map('n', 'gi', lsp.implementation, 'Go to implementation')
+  map('n', 'gy', lsp.type_definition, 'Go to type definition')
+  map('n', 'K', lsp.hover, 'Documentation')
+  map('n', '<leader>rn', lsp.rename, 'Rename symbol')
+  map({'n', 'x'}, '<leader>ca', lsp.code_action, 'Code fix / refactoring')
   map('n', '<leader>ch', function()
     vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({bufnr = buf}), {bufnr = buf})
-  end, 'Tip ve parametre ipuçları')
-  map('n', '<leader>ci', lsp.incoming_calls, 'Bu fonksiyonu çağıranlar')
-  map('n', '<leader>co', lsp.outgoing_calls, 'Bu fonksiyonun çağrıları')
-  map('n', '<leader>cl', vim.lsp.codelens.run, 'CodeLens işlemi')
-  map('n', '<leader>ld', vim.diagnostic.open_float, 'Hata açıklaması')
-  map('n', '<leader>lq', function() vim.diagnostic.setloclist({open = true}) end, 'Dosya hataları')
-  map('n', '<leader>ls', function() require('mini.extra').pickers.lsp({scope = 'workspace_symbol'}) end, 'Proje sembolleri')
+  end, 'Type and parameter hints')
+  map('n', '<leader>ci', lsp.incoming_calls, 'Callers of this function')
+  map('n', '<leader>co', lsp.outgoing_calls, 'Calls made by this function')
+  map('n', '<leader>cl', vim.lsp.codelens.run, 'CodeLens action')
+  map('n', '<leader>ld', vim.diagnostic.open_float, 'Diagnostic details')
+  map('n', '<leader>lq', function() vim.diagnostic.setloclist({open = true}) end, 'File diagnostics')
+  map('n', '<leader>ls', function() require('mini.extra').pickers.lsp({scope = 'workspace_symbol'}) end, 'Project symbols')
   if client.name == 'clangd' then
     map('n', '<leader>ks', function()
       client:request('textDocument/switchSourceHeader', {uri = vim.uri_from_bufnr(buf)}, function(err, uri)
         if err then vim.notify(err.message, vim.log.levels.ERROR)
         elseif uri and uri ~= '' then vim.cmd.edit(vim.fn.fnameescape(vim.uri_to_fname(uri))) end
       end, buf)
-    end, 'Kaynak / başlık dosyasına geç')
+    end, 'Switch source / header')
   end
   if client:supports_method('textDocument/inlayHint', buf) then vim.lsp.inlay_hint.enable(true, {bufnr = buf}) end
   local group = vim.api.nvim_create_augroup('IDEBuffer' .. buf, {clear = false})
@@ -98,22 +98,22 @@ function M.setup()
   vim.api.nvim_create_autocmd('BufWipeout', {group = group, callback = function(e)
     pcall(vim.api.nvim_del_augroup_by_name, 'IDEBuffer' .. e.buf)
   end})
-  vim.api.nvim_create_user_command('IDEInfo', M.info, {desc = 'Proje ve dil araçlarının durumu'})
+  vim.api.nvim_create_user_command('IDEInfo', M.info, {desc = 'Project and language tool status'})
   local function map(key, fn, desc) vim.keymap.set('n', key, fn, {silent = true, desc = desc}) end
-  map('<leader>cf', function() require('mini.pick').builtin.files({}, {source = {cwd = require('custom.ide.project').root()}}) end, 'Projede dosya bul')
-  map('<leader>cg', function() require('mini.pick').builtin.grep_live({}, {source = {cwd = require('custom.ide.project').root()}}) end, 'Projede metin ara')
-  map('<leader>cs', function() require('mini.extra').pickers.lsp({scope = 'document_symbol'}) end, 'Dosya sembolleri')
-  map('<leader>cS', function() require('mini.extra').pickers.lsp({scope = 'workspace_symbol'}) end, 'Proje sembolleri')
-  map('<leader>xx', '<cmd>Trouble diagnostics toggle<cr>', 'Projenin hata ve uyarıları')
-  map('<leader>xq', '<cmd>Trouble qflist toggle<cr>', 'Derleme hataları')
-  map('<leader>xb', '<cmd>Trouble diagnostics toggle filter.buf=0<cr>', 'Dosyanın hata ve uyarıları')
-  map('<leader>cI', M.info, 'Geliştirme ortamı durumu')
-  map('<leader>e', function() require('oil').open() end, 'Dosyalar / taşı / yeniden adlandır')
-  map('[d', function() vim.diagnostic.jump({count = -1, float = true}) end, 'Önceki hata / uyarı')
-  map(']d', function() vim.diagnostic.jump({count = 1, float = true}) end, 'Sonraki hata / uyarı')
+  map('<leader>cf', function() require('mini.pick').builtin.files({}, {source = {cwd = require('custom.ide.project').root()}}) end, 'Find file in project')
+  map('<leader>cg', function() require('mini.pick').builtin.grep_live({}, {source = {cwd = require('custom.ide.project').root()}}) end, 'Search text in project')
+  map('<leader>cs', function() require('mini.extra').pickers.lsp({scope = 'document_symbol'}) end, 'File symbols')
+  map('<leader>cS', function() require('mini.extra').pickers.lsp({scope = 'workspace_symbol'}) end, 'Project symbols')
+  map('<leader>xx', '<cmd>Trouble diagnostics toggle<cr>', 'Project errors and warnings')
+  map('<leader>xq', '<cmd>Trouble qflist toggle<cr>', 'Build errors')
+  map('<leader>xb', '<cmd>Trouble diagnostics toggle filter.buf=0<cr>', 'File errors and warnings')
+  map('<leader>cI', M.info, 'Development environment status')
+  map('<leader>e', function() require('oil').open() end, 'Files / move / rename')
+  map('[d', function() vim.diagnostic.jump({count = -1, float = true}) end, 'Previous error / warning')
+  map(']d', function() vim.diagnostic.jump({count = 1, float = true}) end, 'Next error / warning')
   vim.keymap.set({'n', 'x'}, '<leader>f', function()
     require('conform').format({async = true, lsp_format = 'fallback'})
-  end, {desc = 'Kodu biçimlendir'})
+  end, {desc = 'Format code'})
   vim.ui.select = function(items, opts, callback) require('custom.algo_ui').select(items, opts, callback) end
 end
 

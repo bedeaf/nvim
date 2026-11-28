@@ -78,13 +78,13 @@ function M.setup()
     vim.keymap.set({'n', 'i', 'x'}, '<' .. event .. '>', function()
       held = event ~= 'LeftRelease'
       return '<' .. event .. '>'
-    end, {expr = true, silent = true, desc = 'Fareyle seçim takibi'})
+    end, {expr = true, silent = true, desc = 'Track mouse selection'})
   end
   for _, direction in ipairs({'Up', 'Down'}) do
     local key = '<ScrollWheel' .. direction .. '>'
     vim.keymap.set('x', key, function()
       return key .. (held and '<Cmd>lua require("custom.mouse").extend()<CR>' or '')
-    end, {expr = true, silent = true, desc = 'Kaydırırken fare seçimini uzat'})
+    end, {expr = true, silent = true, desc = 'Extend mouse selection while scrolling'})
   end
   vim.api.nvim_create_autocmd({'FocusLost', 'BufLeave'}, {
     group = vim.api.nvim_create_augroup('LocalMouseSelection', {clear = true}),

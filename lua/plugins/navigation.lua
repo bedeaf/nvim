@@ -12,16 +12,16 @@ return {
           local name = vim.api.nvim_buf_get_name(0)
           if vim.bo.buftype ~= '' or name == '' then return end
           project_list():add()
-          vim.notify('Hızlı erişime eklendi: ' .. vim.fs.basename(name))
-        end, desc = 'Dosyayı hızlı erişime ekle'},
+          vim.notify('Pinned: ' .. vim.fs.basename(name))
+        end, desc = 'Pin file'},
         {'<leader>bh', function()
           local h = require('harpoon')
           h.ui:toggle_quick_menu(project_list())
-        end, desc = 'Projenin sabit dosyaları'},
+        end, desc = 'Pinned project files'},
       }
       for i = 1, 5 do
         keys[#keys + 1] = {'<leader>' .. i, function() project_list():select(i) end,
-          desc = 'Sabit dosya ' .. i}
+          desc = 'Pinned file ' .. i}
       end
       return keys
     end)(),
@@ -45,7 +45,7 @@ return {
   },
   {
     'stevearc/oil.nvim', cmd = 'Oil',
-    keys = {{'-', '<cmd>Oil<cr>', desc = 'Üst klasörü düzenle (taşı / yeniden adlandır)'}},
+    keys = {{'-', '<cmd>Oil<cr>', desc = 'Edit parent folder (move / rename)'}},
     opts = {skip_confirm_for_simple_edits = false, view_options = {show_hidden = true},
       keymaps = {['<C-h>'] = false, ['<C-j>'] = false, ['<C-k>'] = false, ['<C-l>'] = false}},
   },

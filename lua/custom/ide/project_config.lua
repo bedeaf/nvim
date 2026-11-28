@@ -6,27 +6,27 @@ function M.load(root)
   if not vim.uv.fs_lstat(path) then return nil end
   local ok, data = pcall(function() return vim.json.decode(table.concat(vim.fn.readfile(path), '\n')) end)
   local function invalid(detail) return nil, filename .. ': ' .. detail end
-  if not ok or type(data) ~= 'table' then return invalid('Geçerli bir JSON nesnesi gerekli.') end
-  if data.version ~= 1 or type(data.tasks) ~= 'table' then return invalid('version: 1 ve tasks nesnesi gerekli.') end
+  if not ok or type(data) ~= 'table' then return invalid('A valid JSON object is required.') end
+  if data.version ~= 1 or type(data.tasks) ~= 'table' then return invalid('version: 1 and a tasks object are required.') end
   for action, steps in pairs(data.tasks) do
     if type(action) ~= 'string' or type(steps) ~= 'table' or not vim.islist(steps) or #steps == 0 then
-      return invalid('Her görev en az bir komut dizisi içermeli.')
+      return invalid('Every task needs at least one command array.')
     end
     for _, argv in ipairs(steps) do
       if type(argv) ~= 'table' or not vim.islist(argv) or #argv == 0 then
-        return invalid(action .. ': komut ve argümanları bir dizi olmalı.')
+        return invalid(action .. ': the command and its arguments must be an array.')
       end
       for i, arg in ipairs(argv) do
         if type(arg) ~= 'string' or arg:find('\0', 1, true) or (i == 1 and arg == '') then
-          return invalid(action .. ': komut argümanları metin olmalı; komut boş olamaz.')
+          return invalid(action .. ': command arguments must be strings; the command cannot be empty.')
         end
       end
     end
   end
   if data.tools ~= nil then
-    if type(data.tools) ~= 'table' or not vim.islist(data.tools) then return invalid('tools bir dizi olmalı.') end
+    if type(data.tools) ~= 'table' or not vim.islist(data.tools) then return invalid('tools must be an array.') end
     for _, tool in ipairs(data.tools) do
-      if type(tool) ~= 'string' or tool == '' or tool:find('\0', 1, true) then return invalid('Geçersiz tools girdisi.') end
+      if type(tool) ~= 'string' or tool == '' or tool:find('\0', 1, true) then return invalid('Invalid tools entry.') end
     end
   end
   return data
@@ -37,7 +37,7 @@ function M.plan(root, action)
   if err then return nil, err end
   if not data then return nil end
   if not data.tasks[action] then
-    return nil, ('Bu proje için "%s" görevi tanımlı değil. %s dosyasına ekleyebilirsin.'):format(action, filename)
+    return nil, ('This project has no "%s" task. You can add one to %s.'):format(action, filename)
   end
   local compiler = ({c='gcc', cpp='gcc', opengl='gcc', asm='gcc', rust='cargo', go='go', java='javac',
     csharp='dotnet', fsharp='dotnet', zig='zig_build'})[data.template]
