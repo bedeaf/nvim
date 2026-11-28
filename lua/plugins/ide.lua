@@ -95,7 +95,7 @@ return {
   }, keys = {{'<leader><space>', false}, {'<leader>n', false}}},
   {'folke/which-key.nvim', opts = function(_, opts)
     opts.delay = 500
-    opts.win = vim.tbl_deep_extend('force', opts.win or {}, {border = 'rounded'})
+    opts.win = vim.tbl_deep_extend('force', opts.win or {}, {border = 'single'})
     opts.icons = {mappings = false, group = '+', separator = '->',
       keys = {Space = 'Space', Esc = 'Esc', BS = 'BS', CR = 'Enter', Tab = 'Tab'}}
     opts.spec = {
@@ -133,15 +133,15 @@ return {
     table.insert(opts.servers['*'].keys, {'<leader>cr', false})
     opts.inlay_hints.enabled = false
     opts.diagnostics.virtual_text = false
-    opts.diagnostics.float = {border = 'rounded', source = true}
+    opts.diagnostics.float = {border = 'single', source = true}
   end},
   {'saghen/blink.cmp', opts = {
     fuzzy = {implementation = 'lua'},
     keymap = {preset = 'enter', ['<Tab>'] = {'snippet_forward', 'select_next', 'fallback'},
       ['<S-Tab>'] = {'snippet_backward', 'select_prev', 'fallback'}},
-    signature = {enabled = true, window = {border = 'rounded'}},
-    completion = {documentation = {auto_show = true, auto_show_delay_ms = 400, window = {border = 'rounded'}},
-      menu = {border = 'rounded', draw = {columns = {{'label', 'label_description'}, {'kind'}}}},
+    signature = {enabled = true, window = {border = 'single'}},
+    completion = {documentation = {auto_show = true, auto_show_delay_ms = 400, window = {border = 'single'}},
+      menu = {border = 'single', draw = {columns = {{'label', 'label_description'}, {'kind'}}}},
       list = {selection = {preselect = true, auto_insert = false}}, ghost_text = {enabled = false}},
     cmdline = {enabled = false},
   }},
