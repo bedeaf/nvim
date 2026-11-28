@@ -35,12 +35,19 @@ return {
         title = 'Proje dosyaları',
         -- Start in the search field so typing filters files right away.
         focus = 'input',
+        -- While searching, upstream's first Enter only reveals the match in the
+        -- tree. Open files at once; directories keep the reveal behaviour.
+        actions = {open_match = function(picker, item, action)
+          if item and not item.dir then return Snacks.picker.actions.jump(picker, item, action) end
+          return picker:action('confirm')
+        end},
         layout = {layout = {width = 28, min_width = 28}},
         win = {
           list = {keys = {
             ['q'] = 'close', ['<leader>e'] = 'close', ['<leader>q'] = 'close',
           }},
           input = {keys = {
+            ['<CR>'] = {'open_match', mode = {'n', 'i'}},
             ['<leader>e'] = {'close', mode = {'n', 'i'}},
             ['<leader>q'] = {'close', mode = 'n'},
           }},
