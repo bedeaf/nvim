@@ -63,7 +63,8 @@ function M.servers()
     root_markers = {'compile_commands.json', 'Kbuild', 'CMakeLists.txt', 'Makefile', '.clangd', '.git'},
   })
   configure('lua_ls', {settings = {Lua = {
-    runtime = {version = 'LuaJIT'}, workspace = {checkThirdParty = false, library = {vim.env.VIMRUNTIME}},
+    runtime = {version = 'LuaJIT'}, workspace = {checkThirdParty = false, library = {vim.env.VIMRUNTIME},
+      maxPreload = 1000, preloadFileSize = 200, ignoreDir = {'.git', 'build', 'test', 'tests', '.deps'}},
     completion = {callSnippet = 'Replace'}, telemetry = {enable = false}, hint = {enable = true},
   }}})
   configure('basedpyright', {
